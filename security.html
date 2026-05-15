@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Security &amp; Technical Design — Cody Zoom Meetbot</title>
+<meta name="description" content="Security &amp; Technical Design for Cody Zoom Meetbot, a Zoom Marketplace application by Obsidian Inc." />
+<style>
+:root {
+  --ink: #111;
+  --paper: #fefefe;
+  --muted: #555;
+  --rule: #ddd;
+  --accent: #1a4d8f;
+  --code-bg: #f3f3f3;
+  --maxw: 720px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+}
+header.site {
+  border-bottom: 1px solid var(--rule);
+  padding: 24px 24px 16px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+header.site .crumb { font-size: 0.85em; color: var(--muted); margin-bottom: 4px; }
+header.site .crumb a { color: var(--muted); text-decoration: none; }
+header.site .crumb a:hover { text-decoration: underline; }
+header.site h1 { font-size: 1.6rem; margin: 0 0 4px; }
+header.site .subtitle { color: var(--muted); margin: 0; font-size: 0.95em; }
+main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px;
+}
+main h1 { display: none; } /* first H1 from doc is duplicate of header */
+main h2 { font-size: 1.3rem; margin-top: 2em; padding-bottom: 4px; border-bottom: 1px solid var(--rule); }
+main h3 { font-size: 1.1rem; margin-top: 1.5em; }
+main h4 { font-size: 1rem; margin-top: 1.3em; }
+main p { margin: 1em 0; }
+main ul, main ol { padding-left: 1.5em; }
+main li { margin: 0.3em 0; }
+main code {
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92em;
+}
+main pre {
+  background: var(--code-bg);
+  padding: 12px;
+  overflow-x: auto;
+  border-radius: 4px;
+}
+main pre code { background: transparent; padding: 0; }
+main a { color: var(--accent); }
+main a:hover { text-decoration: none; }
+main blockquote {
+  border-left: 3px solid var(--rule);
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  color: var(--muted);
+  font-style: italic;
+}
+main hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+main table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+  font-size: 0.95em;
+}
+main th, main td {
+  border: 1px solid var(--rule);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+main th { background: var(--code-bg); font-weight: 600; }
+main em { color: var(--muted); }
+footer.site {
+  border-top: 1px solid var(--rule);
+  margin-top: 3em;
+  padding: 20px 24px;
+  max-width: var(--maxw);
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+footer.site a { color: var(--muted); }
+footer.site p { margin: 4px 0; }
+@media (max-width: 600px) {
+  header.site, main, footer.site { padding-left: 16px; padding-right: 16px; }
+  header.site h1 { font-size: 1.3rem; }
+}
+@media print {
+  header.site, footer.site { border: none; }
+  main h2 { page-break-after: avoid; }
+  main h3, main h4 { page-break-after: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <p class="crumb"><a href="index.html">Cody Zoom Meetbot</a></p>
+  <h1>Security &amp; Technical Design</h1>
+  <p class="subtitle">Cody Zoom Meetbot</p>
+</header>
+<main>
+<h1>Security &amp; Technical Design — Cody Zoom Meetbot</h1>
+<p><strong>Effective Date:</strong> 2026-05-15
+<strong>Last Updated:</strong> 2026-05-15</p>
+<p>Cody Zoom Meetbot ("Cody," "the App," "we," "us," or "our") is a Zoom Marketplace application operated by Obsidian Inc., d/b/a Lattice. Cody joins authorized Zoom meetings as an AI assistant to provide real-time transcription, conversational Q&amp;A, action-item extraction, and post-meeting summaries.</p>
+<p>This document accompanies the Cody <a href="https://codewarrior4life.github.io/lattice-meetbot-public/privacy.html">Privacy Policy</a> and <a href="https://codewarrior4life.github.io/lattice-meetbot-public/terms.html">Terms of Service</a>. Where the Privacy Policy describes what data we collect and why, this document describes how the system is built, how that data is protected end-to-end, and what controls govern access. It is intended for Zoom Marketplace reviewers, security-conscious customers, and anyone evaluating Cody against their own information-security requirements.</p>
+<p>This Security &amp; Technical Design is published at https://codewarrior4life.github.io/lattice-meetbot-public/security.html and is referenced from the Cody Zoom Meetbot Marketplace listing per Zoom's Marketplace requirements.</p>
+<h2>1. Overview</h2>
+<p>This document covers the design of Cody as it pertains to the security, privacy, and integrity of user data obtained through the Zoom Marketplace OAuth grant and through the Zoom Meeting SDK. Specifically, it describes:</p>
+<ul>
+<li>The runtime architecture and its ephemerality guarantees</li>
+<li>How Cody authenticates to Zoom and how it is authorized to act on a user's behalf</li>
+<li>The OAuth scopes Cody requests and why each is necessary</li>
+<li>The data flows through the system, from authorization through meeting end through deletion</li>
+<li>Encryption in transit and at rest</li>
+<li>Storage, retention, and revocation</li>
+<li>Tenant isolation and access control</li>
+<li>The subprocessors Cody relies on and what each is allowed to see</li>
+<li>Our secure development lifecycle and supply-chain transparency</li>
+<li>Vulnerability disclosure and incident response</li>
+<li>Our compliance posture, including where we are explicitly not yet certified</li>
+</ul>
+<p>Where this document is silent on a control, the corresponding statement in the Privacy Policy governs. Where the two documents speak to the same control, the more restrictive of the two governs.</p>
+<h2>2. Architecture at a glance</h2>
+<p>Cody is built on a single architectural axiom: <strong>one container per meeting</strong>.</p>
+<p>For every Zoom meeting Cody is authorized to join, the App spawns a fresh, ephemeral Linux Docker container. That container is the entire trust boundary for the meeting. It exists from the moment the meeting begins (or from the moment the host admits Cody from the waiting room) until the meeting ends or Cody is removed. When the container terminates, all in-memory state — audio buffers, decoded PCM frames, transient transcripts, chat context windows, LLM prompts — is destroyed with it. Any artifact that must outlive the meeting (the meeting WAV recording, the final transcript, the generated summary) is written to encrypted storage governed by the retention rules in §7 of this document, and the container itself is torn down.</p>
+<p>There is no long-running multi-tenant daemon, no shared in-memory state across meetings, and no co-located processing of two meetings inside the same process. This is a deliberate failure-isolation and blast-radius decision: if a container is compromised, the only data exposed is the data for the single meeting that container was processing.</p>
+<p>The major components inside each meeting container are:</p>
+<ul>
+<li><strong>The Zoom Meeting SDK for Linux</strong> (v7.0.x), which authenticates to Zoom signaling, joins the meeting as a real participant ("Cody Assistant (Notetaker)"), and exposes meeting events, chat messages, and raw PCM audio frames to the App.</li>
+<li><strong>A FastAPI runtime sidecar</strong>, which orchestrates the SDK lifecycle, fans audio frames out to the transcription path, brokers chat messages to and from the LLM, and exposes a small HTTP/WebSocket surface for the consuming orchestrator to monitor the meeting in real time.</li>
+<li><strong>A transcription pipeline</strong>, which either streams audio to Deepgram for low-latency Speech-to-Text (when that subprocessor is enabled) or runs a local Whisper backend inside the container if Deepgram is disabled.</li>
+<li><strong>An LLM client</strong> that calls Anthropic's Claude API for in-meeting <code>@cody</code> replies and for the post-meeting summary.</li>
+</ul>
+<p>The bot is a real meeting participant. It is not a screen-scraping browser hack. It does not animate a Chromium window or read pixels off a video frame. Audio is delivered by the SDK's audio-helper callback path as raw PCM. Video frames are not subscribed to at all, which is enforced by the SDK initialization config rather than by a downstream filter — the bytes are never delivered to the App.</p>
+<h2>3. Authentication and authorization</h2>
+<p>Cody uses a <strong>dual-credential authentication model</strong>. Two distinct credentials must be present for the bot to join a meeting, and they serve different purposes.</p>
+<h3>3.1 Meeting SDK Key/Secret → SDK JWT</h3>
+<p>The first credential is the <strong>Meeting SDK Key/Secret</strong> issued to Obsidian Inc. as the developer of Cody. At container startup, the SDK Key/Secret is loaded from the container's secret store and used to mint an HS256 JWT. The JWT is passed to <code>SDKAuth(ctx)</code>, which authenticates the SDK client process to Zoom's signaling infrastructure.</p>
+<p>This credential identifies the <strong>application</strong> to Zoom. It is owned by Obsidian, rotated on a periodic schedule, and is never exposed to end users, displayed in product UI, or written into logs.</p>
+<h3>3.2 End-user OAuth grant → access token, refresh token, ZAK</h3>
+<p>The second credential is the <strong>end-user OAuth grant</strong>. When a Zoom user authorizes Cody through the Marketplace, Zoom issues an OAuth access token and a refresh token scoped to the permissions the user granted (see §4). For each meeting Cody is asked to join on that user's behalf, the App exchanges those tokens for a short-lived <strong>ZAK (Zoom Access Key)</strong> token, which lets the SDK present itself in the meeting as the authorizing user's notetaker rather than as an anonymous third party.</p>
+<p>This credential identifies the <strong>user</strong> to Zoom. Refresh tokens are stored encrypted at rest (see §6), are rotated according to Zoom's policy, and are deleted within 30 days of authorization revocation, as described in §7.</p>
+<p>The dual-credential model means that neither the SDK Key alone nor a stolen access token alone is sufficient to join a meeting in a way that impersonates a user: the SDK Key authenticates the app, the OAuth grant + ZAK identifies the user, and both are required to produce a valid SDK join payload.</p>
+<h2>4. OAuth scopes and justifications</h2>
+<p>Cody requests the minimum set of OAuth scopes required to deliver its features. We do not request, and the App does not exercise, any <code>*:write</code> scope. Cody does not modify Zoom account settings, does not create or schedule meetings, does not change passwords, does not invite participants, and does not delete cloud recordings, chat history, or any other user-visible state on the Zoom side.</p>
+<table>
+<thead>
+<tr>
+<th>Scope (Zoom name)</th>
+<th>Why Cody requests it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user:read:zak</code></td>
+<td>Required to fetch a ZAK token so Cody can join meetings on the authorizing user's behalf. Without this scope, the bot cannot present itself as a notetaker tied to the user; without a ZAK, it cannot join.</td>
+</tr>
+<tr>
+<td><code>user:read</code></td>
+<td>Required to identify which Zoom account authorized Cody so that we can correctly attribute artifacts (e.g., a transcript belongs to the user whose account authorized the bot) and so that we can respond to data-subject requests using verified account identifiers. We collect the user ID and the account-associated email only; no additional profile PII is read.</td>
+</tr>
+<tr>
+<td><code>meeting:read:meeting</code></td>
+<td>Required to read meeting metadata (topic, scheduled start time, host) for the meetings Cody is asked to join. Only meetings the user explicitly points Cody at — either by passing a join URL or by scheduling through a Cody-aware orchestrator — are read. Cody does not enumerate the user's full meeting list.</td>
+</tr>
+</tbody>
+</table>
+<p>Every scope is explained in plain English in the OAuth consent flow before the user accepts. If we later add a scope, that change requires both a new Marketplace review and a notification to existing authorizing users.</p>
+<h2>5. Data flows</h2>
+<p>This section walks through the seven data paths in Cody from end to end.</p>
+<h3>5.1 Authorization</h3>
+<p>The authorization flow starts in the Zoom Marketplace. The user clicks "Authorize" on the Cody listing and is redirected to Zoom's OAuth consent screen. Zoom presents the scopes from §4 above. If the user accepts, Zoom redirects back to Cody's OAuth callback endpoint with an authorization code. The callback endpoint exchanges the code for an access token and a refresh token over TLS to Zoom. Both tokens are immediately encrypted with AES-256-GCM and written to the secret store. The user's Zoom user ID and account-email are recorded against the authorization. No further information is requested or stored at this stage.</p>
+<h3>5.2 Meeting join</h3>
+<p>When the user (or an orchestrator acting for the user) requests that Cody join a meeting, the App looks up the user's encrypted refresh token, decrypts it inside the meeting-runtime service role, exchanges it for a fresh ZAK if needed, mints the SDK JWT from the Obsidian-owned SDK Key/Secret, and hands both credentials to the SDK inside a newly spawned container. The container connects to Zoom over WSS (TLS) and either joins the meeting immediately or sits in the meeting's waiting room until the host admits Cody Assistant (Notetaker).</p>
+<h3>5.3 Audio capture and transcription</h3>
+<p>Once Cody is admitted, the Meeting SDK starts delivering raw PCM audio frames via the SDK's audio-helper callback. Each frame is held briefly in an in-memory buffer inside the container. From the buffer, audio flows to two sinks:</p>
+<ul>
+<li>A rolling WAV file on the container's encrypted scratch filesystem, used to produce a meeting recording artifact at the end of the call.</li>
+<li>The transcription path: either a streaming connection to Deepgram (if enabled) or the local Whisper backend running inside the container.</li>
+</ul>
+<p>Transcription output — text segments with timing and (where available) speaker labels — is held in memory for the duration of the meeting and serialized to the transcript artifact at meeting end. The transcript is <strong>not</strong> sent to Anthropic except when needed to answer an <code>@cody</code> mention or to generate the post-meeting summary; see §5.5.</p>
+<h3>5.4 Chat handling</h3>
+<p>Chat messages posted in the Zoom meeting are delivered to Cody via the SDK's chat callback. Messages addressed to Cody (those that begin with <code>@cody</code> or are explicitly directed to the bot's participant ID) are routed through the LLM path described below. Other messages are buffered in memory only as conversational context for the LLM and are not persisted beyond the meeting unless the user has explicitly opted in to chat retention.</p>
+<h3>5.5 Summary and reply generation</h3>
+<p>Cody calls Anthropic's Claude API for two purposes: to produce a reply when a participant addresses the bot in chat, and to generate a post-meeting summary and action-item list. In both cases, only the minimum context required is sent — typically a recent transcript window plus the chat exchange for replies, and the full transcript plus the chat log for summaries. Anthropic's commercial API terms prohibit training on customer inputs. We do not append meeting content to long-lived prompt files, vector databases, or model fine-tuning corpora.</p>
+<h3>5.6 Artifact storage</h3>
+<p>When the meeting ends or Cody is removed, the container finalizes three artifacts: the WAV recording, the transcript, and the summary/action-item document. Each is written to per-tenant encrypted storage. Each is tagged with the authorizing user's Zoom user ID, the Zoom meeting ID, and a creation timestamp. The container then terminates, and all in-memory state is destroyed.</p>
+<h3>5.7 Deletion and revocation</h3>
+<p>Users may revoke Cody's authorization from the Zoom Marketplace at any time. On revocation, Zoom invalidates the refresh token, and our token store deletes the encrypted token record within 30 days of receiving the revocation event. Users may also request artifact-level deletion at any time before the retention deadline by emailing cody@obsidian-inc.com from the email tied to their Zoom account. The default retention timer is 30 days for content artifacts (WAV, transcript, summary, chat log) and 7 days for one-off authorizations.</p>
+<h2>6. Encryption</h2>
+<h3>6.1 In transit</h3>
+<p>All network traffic to and from Cody uses TLS 1.2 or higher.</p>
+<ul>
+<li>Traffic to Zoom (HTTPS for REST, WSS for signaling) is TLS-terminated by Zoom.</li>
+<li>Traffic to Anthropic's Claude API uses HTTPS, TLS terminated by Anthropic.</li>
+<li>Traffic to Deepgram (when streaming STT is enabled) uses HTTPS/WSS, TLS terminated by Deepgram.</li>
+<li>The public policy site on GitHub Pages is served exclusively over HTTPS.</li>
+</ul>
+<p>We do not run user traffic through opportunistic-encryption channels or fall back to TLS 1.0/1.1 under any condition.</p>
+<h3>6.2 At rest</h3>
+<p>Sensitive data at rest is encrypted at the application layer and on the underlying storage volume.</p>
+<ul>
+<li>OAuth access tokens and refresh tokens are encrypted with AES-256-GCM before they touch persistent storage. The data encryption keys are managed by an environment-scoped secret store; the encryption keys are never checked into source control and are not present in the meeting-runtime container's environment except via the runtime service-role binding.</li>
+<li>WAV recordings, transcripts, and summaries are written to encrypted filesystems with per-tenant directory isolation. A meeting container can read and write only the directory belonging to the user whose meeting it is processing.</li>
+</ul>
+<h2>7. Storage and retention</h2>
+<p>The retention rules below mirror Privacy Policy §6 and are reproduced here for completeness.</p>
+<ul>
+<li><strong>OAuth tokens</strong> are retained for the lifetime of the authorization. When the user revokes the authorization in Zoom, the refresh token is deleted within 30 days.</li>
+<li><strong>Meeting WAV recordings, transcripts, chat history, and summaries</strong> are retained for <strong>30 days by default</strong> and then permanently deleted. Users may request deletion at any time before that.</li>
+<li><strong>One-off authorizations</strong> (per-meeting consent rather than persistent OAuth) result in all derived artifacts being deleted within 7 days of the meeting ending unless the user explicitly retains them.</li>
+<li><strong>Diagnostic logs</strong> are retained for 90 days. They are content-redacted: they do not contain audio, transcript text, chat content, or user-readable LLM prompts; they contain only event metadata sufficient to debug failures and audit access.</li>
+<li><strong>Account-level identifiers</strong> (user ID, account email) are retained while the authorization is active and deleted within 30 days of revocation.</li>
+</ul>
+<p>The more restrictive of the user's explicit instruction and the default retention window governs.</p>
+<h2>8. Access controls and tenant isolation</h2>
+<p>Each meeting container runs under its own service identity and can access only that meeting's data. There is no multi-tenant data co-mingling at the storage layer or at the runtime layer.</p>
+<p>Production deployments enforce least-privilege IAM on the secret store: only the meeting-runtime service role may decrypt OAuth tokens, and that role is bound to a single container's lifetime. Human operators do not hold blanket decryption rights against the token store; access to production data requires a documented operational reason, and all such access is logged and auditable.</p>
+<p>The Cody operations team's day-to-day work is performed against open-source code and against ephemeral test accounts. Production user data is touched only when an incident, a data-subject request, or a debugging need requires it.</p>
+<h2>9. Subprocessor list and justifications</h2>
+<p>The same subprocessors are listed in Privacy Policy §5; this section adds the technical rationale for each.</p>
+<ul>
+<li><strong>Zoom Video Communications, Inc.</strong> Cody cannot exist without Zoom: the Meeting SDK is the participant runtime, Zoom mints the OAuth and ZAK tokens, and Zoom signaling carries audio and chat. The data shared with Zoom is the OAuth grant, the ZAK token, and the SDK JWT; in return, Zoom delivers the audio, chat, and meeting events that Cody operates on.</li>
+<li><strong>Anthropic, PBC.</strong> Cody calls Claude for in-meeting <code>@cody</code> replies and for post-meeting summary generation. The data shared with Anthropic is the transcript window and chat context required for the specific generation. Anthropic's commercial API terms prohibit training on customer inputs.</li>
+<li><strong>Deepgram, Inc.</strong> (optional). When streaming STT is enabled, raw PCM audio is sent to Deepgram for transcription. If Deepgram is disabled, transcription falls back to a local Whisper backend inside the meeting container, and audio leaves the container only via Zoom signaling.</li>
+<li><strong>GitHub Pages.</strong> Cody's public policy and security documents are statically hosted on GitHub Pages. No user data is sent to GitHub Pages — only the HTML of these documents themselves.</li>
+</ul>
+<p>No additional subprocessors handle user data. We do not use third-party analytics, advertising trackers, or behavioral-targeting services anywhere in Cody.</p>
+<h2>10. Secure development lifecycle</h2>
+<p>Cody is open-source. The full source code is published at https://github.com/CodeWarrior4Life/lattice-meetbot under the Apache 2.0 license. Anyone — Zoom reviewers, customers, security researchers — can read the implementation directly rather than rely on this document alone.</p>
+<p>Our secure development practices include:</p>
+<ul>
+<li><strong>Code review on every change.</strong> All changes to the public repository go through pull-request review before merging.</li>
+<li><strong>Secrets via environment variables.</strong> No credential, OAuth client ID, client secret, SDK key, ZAK, JWT, or session secret is committed to source control. A pre-commit hook blocks accidental secret commits.</li>
+<li><strong>Pinned dependencies.</strong> Python dependencies are pinned in <code>pyproject.toml</code> with a corresponding <code>uv.lock</code> lockfile. Any Node-side tooling, where used, is pinned via <code>package-lock.json</code>. Dependency updates flow through review like any other change.</li>
+<li><strong>Reproducible Docker builds.</strong> The container image is built on every release from a single Dockerfile checked into the repo. The Linux Meeting SDK shared library is extracted from the official Zoom tarball — not from a third-party mirror.</li>
+<li><strong>Open advisories.</strong> Security-relevant issues are published as GitHub Security Advisories on the public repository.</li>
+</ul>
+<h2>11. Vulnerability management and disclosure</h2>
+<p>The canonical channel for vulnerability reports is <strong>GitHub Security Advisories</strong> on https://github.com/CodeWarrior4Life/lattice-meetbot. Reports can also be sent to cody@obsidian-inc.com.</p>
+<p>Triage commitments:</p>
+<ul>
+<li><strong>Critical and High severity:</strong> triaged within five (5) business days of receipt.</li>
+<li><strong>Medium and Low severity:</strong> triaged within fifteen (15) business days.</li>
+<li><strong>Coordinated disclosure:</strong> we work with reporters on a coordinated disclosure timeline that gives users adequate time to upgrade before a public advisory is published.</li>
+</ul>
+<p>We do not currently offer a paid bug bounty, but we credit reporters in advisories and release notes unless the reporter requests anonymity.</p>
+<h2>12. Incident response and breach notification</h2>
+<p>If Obsidian Inc. confirms a security incident that affects user data processed through Cody, notification will follow the timelines committed to in the Privacy Policy:</p>
+<ul>
+<li><strong>EEA / UK users:</strong> notification within seventy-two (72) hours of confirming the breach, in accordance with GDPR Article 33.</li>
+<li><strong>US users:</strong> notification within thirty (30) days where applicable state law requires it, and sooner where state law requires sooner.</li>
+<li><strong>Marketplace and Zoom Trust &amp; Safety:</strong> notified in parallel for any incident affecting a Marketplace-listed integration's user data.</li>
+</ul>
+<p>Each incident triggers a written post-incident review that captures root cause, customer impact, and follow-up controls. Post-incident reviews are shared with affected customers on request.</p>
+<h2>13. Compliance posture</h2>
+<p>Cody's compliance posture is intentionally conservative. We make the following statements honestly, including the ones that are negative.</p>
+<ul>
+<li><strong>GDPR.</strong> The legal bases for processing personal data of EEA and UK users are listed in Privacy Policy §4. Data subject rights — access, correction, deletion, restriction, portability, withdrawal of consent — are honored via cody@obsidian-inc.com.</li>
+<li><strong>CCPA and CPRA.</strong> We do not "sell" personal information as that term is defined under California law, and we do not "share" personal information for cross-context behavioral advertising.</li>
+<li><strong>SOC 2 / ISO 27001.</strong> Cody is <strong>not</strong> currently SOC 2 or ISO 27001 certified. Both certifications are on our roadmap and will be pursued once the user base justifies the audit cost. We will update this document when certification status changes.</li>
+<li><strong>HIPAA.</strong> Cody is <strong>not</strong> authorized for use in HIPAA-regulated healthcare meetings. We do not currently sign Business Associate Agreements. <strong>Do not use Cody to process Protected Health Information.</strong> If your meeting workflow requires HIPAA coverage, contact cody@obsidian-inc.com before authorizing Cody so we can confirm whether a BAA path is available for your use case.</li>
+<li><strong>FedRAMP and government clouds.</strong> Cody is not authorized for FedRAMP-controlled environments or US government cloud regions.</li>
+</ul>
+<p>Where a compliance regime is not listed here, customers should assume it is not in scope. We would rather be honest about our current state than overclaim and be downgraded by a reviewer for inaccuracy.</p>
+<h2>14. Open-source supply chain transparency</h2>
+<p>Cody's supply chain is intentionally legible.</p>
+<ul>
+<li>The source repository (https://github.com/CodeWarrior4Life/lattice-meetbot) is public under Apache 2.0.</li>
+<li>The container image is built from a single Dockerfile in that repository and published to GitHub Container Registry.</li>
+<li>Python dependencies are fetched from PyPI; Node-side dependencies, where used, from npm; the Linux Meeting SDK shared library is extracted from the official Zoom-published tarball.</li>
+<li>A Software Bill of Materials (SBOM) is available on request. We will publish SBOMs as build artifacts once tooling for our chosen format is finalized.</li>
+</ul>
+<p>Reviewers and customers who want to verify that the published image matches the published source can do so by rebuilding the image from the tagged commit.</p>
+<h2>15. Operational hardening</h2>
+<p>In addition to the controls already described, the operational posture of Cody is shaped by the <strong>principle of ephemerality</strong>.</p>
+<ul>
+<li><strong>Containers are single-purpose and short-lived.</strong> A container exists for one meeting and is destroyed at the end of that meeting. There is no long-running daemon a successful exploit could pivot through to reach other meetings.</li>
+<li><strong>Configuration is environment-scoped.</strong> Each environment (development, staging, production) has its own secret store, its own Marketplace app registration, and its own OAuth client. Credentials do not cross environment boundaries.</li>
+<li><strong>No interactive shells in production containers.</strong> Operations is performed by re-deploying images, not by SSH-ing into running containers. Where emergency debugging is required, audit logs capture every action.</li>
+<li><strong>Logs are content-redacted.</strong> Diagnostic logs sufficient to debug failures and audit access are retained for 90 days; the contents of meetings (audio, transcripts, chat messages, LLM prompts) are not written to logs.</li>
+<li><strong>Capability flags default to the most restrictive setting.</strong> Optional subprocessors (Deepgram), optional retention windows (extended transcript retention), and optional chat retention are off by default and require explicit user opt-in.</li>
+</ul>
+<p>The combination of one-container-per-meeting ephemerality, environment-scoped secrets, content-redacted logs, and opt-in optional features means that the default deployment of Cody is the most privacy-preserving deployment of Cody.</p>
+<h2>16. Reviewer contact and security questions</h2>
+<p>Zoom Marketplace reviewers, security-conscious customers, and security researchers are encouraged to reach out directly.</p>
+<ul>
+<li><strong>Security and operations:</strong> cody@obsidian-inc.com</li>
+<li><strong>Engineering owner:</strong> Cyril Carrière, theblacktruth@gmail.com</li>
+<li><strong>Vulnerability reports:</strong> GitHub Security Advisories at https://github.com/CodeWarrior4Life/lattice-meetbot/security/advisories</li>
+<li><strong>Privacy and data-subject requests:</strong> cody@obsidian-inc.com (per Privacy Policy §8 and §13)</li>
+</ul>
+<p>We will respond to security inquiries from Zoom Marketplace reviewers as a priority during the review process and within five business days otherwise.</p>
+<hr>
+<p><em>This Security &amp; Technical Design document is a working draft prepared for Cody Zoom Meetbot's submission to the Zoom Marketplace. It is subject to revision as the product evolves.</em></p>
+</main>
+<footer class="site">
+  <p>Source code: <a href="https://github.com/CodeWarrior4Life/lattice-meetbot">github.com/CodeWarrior4Life/lattice-meetbot</a> · Apache 2.0</p>
+  <p>Operator: Obsidian Inc., d/b/a Lattice · Contact: <a href="mailto:cody@obsidian-inc.com">cody@obsidian-inc.com</a></p>
+  <p>This document is published on GitHub Pages. The source-of-truth Markdown is in a private vault and mirrored to <a href="https://github.com/CodeWarrior4Life/lattice-meetbot/tree/main/docs/marketplace">docs/marketplace/</a> in the project repository.</p>
+</footer>
+</body>
+</html>

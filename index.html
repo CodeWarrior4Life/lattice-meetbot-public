@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Public documents — Cody Zoom Meetbot</title>
+<meta name="description" content="Public documents for Cody Zoom Meetbot, a Zoom Marketplace application by Obsidian Inc." />
+<style>
+:root {
+  --ink: #111;
+  --paper: #fefefe;
+  --muted: #555;
+  --rule: #ddd;
+  --accent: #1a4d8f;
+  --code-bg: #f3f3f3;
+  --maxw: 720px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+}
+header.site {
+  border-bottom: 1px solid var(--rule);
+  padding: 24px 24px 16px;
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+header.site .crumb { font-size: 0.85em; color: var(--muted); margin-bottom: 4px; }
+header.site .crumb a { color: var(--muted); text-decoration: none; }
+header.site .crumb a:hover { text-decoration: underline; }
+header.site h1 { font-size: 1.6rem; margin: 0 0 4px; }
+header.site .subtitle { color: var(--muted); margin: 0; font-size: 0.95em; }
+main {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px;
+}
+main h1 { display: none; } /* first H1 from doc is duplicate of header */
+main h2 { font-size: 1.3rem; margin-top: 2em; padding-bottom: 4px; border-bottom: 1px solid var(--rule); }
+main h3 { font-size: 1.1rem; margin-top: 1.5em; }
+main h4 { font-size: 1rem; margin-top: 1.3em; }
+main p { margin: 1em 0; }
+main ul, main ol { padding-left: 1.5em; }
+main li { margin: 0.3em 0; }
+main code {
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92em;
+}
+main pre {
+  background: var(--code-bg);
+  padding: 12px;
+  overflow-x: auto;
+  border-radius: 4px;
+}
+main pre code { background: transparent; padding: 0; }
+main a { color: var(--accent); }
+main a:hover { text-decoration: none; }
+main blockquote {
+  border-left: 3px solid var(--rule);
+  margin: 1em 0;
+  padding: 0.2em 1em;
+  color: var(--muted);
+  font-style: italic;
+}
+main hr { border: 0; border-top: 1px solid var(--rule); margin: 2em 0; }
+main table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  width: 100%;
+  font-size: 0.95em;
+}
+main th, main td {
+  border: 1px solid var(--rule);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+main th { background: var(--code-bg); font-weight: 600; }
+main em { color: var(--muted); }
+footer.site {
+  border-top: 1px solid var(--rule);
+  margin-top: 3em;
+  padding: 20px 24px;
+  max-width: var(--maxw);
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.85em;
+  color: var(--muted);
+}
+footer.site a { color: var(--muted); }
+footer.site p { margin: 4px 0; }
+@media (max-width: 600px) {
+  header.site, main, footer.site { padding-left: 16px; padding-right: 16px; }
+  header.site h1 { font-size: 1.3rem; }
+}
+@media print {
+  header.site, footer.site { border: none; }
+  main h2 { page-break-after: avoid; }
+  main h3, main h4 { page-break-after: avoid; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <p class="crumb"><a href="index.html">Cody Zoom Meetbot</a></p>
+  <h1>Public documents</h1>
+  <p class="subtitle">Cody Zoom Meetbot</p>
+</header>
+<main>
+<p>Public policy and technical disclosure documents for <strong>Cody Zoom Meetbot</strong>, a Zoom Marketplace application by Obsidian Inc. (d/b/a Lattice).</p>
+<ul>
+<li><a href="privacy.html">Privacy Policy</a> &mdash; what we collect, how we use it, who we share with, how long we keep it.</li>
+<li><a href="terms.html">Terms of Service</a> &mdash; the agreement that governs your use of the app.</li>
+<li><a href="security.html">Security &amp; Technical Design</a> &mdash; architecture, encryption, scopes, retention, compliance posture.</li>
+</ul>
+<p>The Cody Zoom Meetbot source code is open-source under the Apache 2.0 license at <a href="https://github.com/CodeWarrior4Life/lattice-meetbot">github.com/CodeWarrior4Life/lattice-meetbot</a>.</p>
+<p>For privacy or security inquiries: <a href="mailto:cody@obsidian-inc.com">cody@obsidian-inc.com</a>. For engineering inquiries: <a href="mailto:theblacktruth@gmail.com">theblacktruth@gmail.com</a>.</p>
+</main>
+<footer class="site">
+  <p>Source code: <a href="https://github.com/CodeWarrior4Life/lattice-meetbot">github.com/CodeWarrior4Life/lattice-meetbot</a> · Apache 2.0</p>
+  <p>Operator: Obsidian Inc., d/b/a Lattice · Contact: <a href="mailto:cody@obsidian-inc.com">cody@obsidian-inc.com</a></p>
+  <p>This document is published on GitHub Pages. The source-of-truth Markdown is in a private vault and mirrored to <a href="https://github.com/CodeWarrior4Life/lattice-meetbot/tree/main/docs/marketplace">docs/marketplace/</a> in the project repository.</p>
+</footer>
+</body>
+</html>
